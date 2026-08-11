@@ -7,8 +7,7 @@ The project demonstrates how multiple services can be orchestrated together usin
 ---
 
 ## 🏗️ Architecture
-
-```text
+![Project Architecture](docs/architecture.png)
                          ┌─────────────────────┐
                          │       CLIENT        │
                          │   Web Browser / API │
