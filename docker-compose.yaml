@@ -1,117 +1,117 @@
 name: wordpress-compose-project
+
 services:
+
   mariadb:
+    image: mariadb:11
     container_name: mariadb
+
+    restart: unless-stopped
+
     environment:
-      MYSQL_DATABASE: wordpress
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
-      MYSQL_USER: wpuser
-      PMA_HOST: mariadb
-      PMA_PORT: "3306"
-      TZ: Africa/Cairo
-      WORDPRESS_DB_HOST: mariadb:3306
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
-      WORDPRESS_DB_USER: wpuser
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: ${TZ}
+
     healthcheck:
       test:
-        - CMD
-        - healthcheck.sh
-        - --connect
-        - --innodb_initialized
-      timeout: 5s
+        [
+          "CMD",
+          "healthcheck.sh",
+          "--connect",
+          "--innodb_initialized"
+        ]
       interval: 10s
+      timeout: 5s
       retries: 5
       start_period: 30s
-    image: mariadb:11
-    networks:
-      wordpress-network: null
-    restart: unless-stopped
+
     volumes:
-      - type: volume
-        source: db_data
-        target: /var/lib/mysql
-        volume: {}
+      - db_data:/var/lib/mysql
+
+    networks:
+      - wordpress-network
+
+
+  wordpress:
+    build:
+      context: ./wordpress
+      dockerfile: Dockerfile
+
+    container_name: wordpress
+
+    restart: unless-stopped
+
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+    environment:
+      WORDPRESS_DB_HOST: mariadb:3306
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: ${TZ}
+
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./uploads:/var/www/html/wp-content/uploads
+
+    networks:
+      - wordpress-network
+
+
   nginx:
     build:
-      context: C:\Users\Z BOOK G3\wordpress-compose-project\nginx
+      context: ./nginx
       dockerfile: Dockerfile
+
     container_name: nginx
+
+    restart: unless-stopped
+
     depends_on:
       wordpress:
         condition: service_started
-        required: true
-    networks:
-      wordpress-network: null
+
     ports:
-      - mode: ingress
-        target: 80
-        published: "8080"
-        protocol: tcp
-    restart: unless-stopped
+      - "8089:80"
+
     volumes:
-      - type: volume
-        source: wordpress_data
-        target: /var/www/html
-        volume: {}
+      - wordpress_data:/var/www/html
+
+    networks:
+      - wordpress-network
+
+
   phpmyadmin:
+    image: phpmyadmin:5.2
     container_name: phpmyadmin
+
+    restart: unless-stopped
+
     depends_on:
       mariadb:
         condition: service_healthy
-        required: true
+
     environment:
       PMA_HOST: mariadb
-      PMA_PORT: "3306"
-    image: phpmyadmin:latest
-    networks:
-      wordpress-network: null
+      PMA_PORT: 3306
+
     ports:
-      - mode: ingress
-        target: 80
-        published: "8081"
-        protocol: tcp
-    restart: unless-stopped
-  wordpress:
-    build:
-      context: C:\Users\Z BOOK G3\wordpress-compose-project\wordpress
-      dockerfile: Dockerfile
-    container_name: wordpress
-    depends_on:
-      mariadb:
-        condition: service_healthy
-        required: true
-    environment:
-      MYSQL_DATABASE: wordpress
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
-      MYSQL_USER: wpuser
-      PMA_HOST: mariadb
-      PMA_PORT: "3306"
-      TZ: Africa/Cairo
-      WORDPRESS_DB_HOST: mariadb:3306
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
-      WORDPRESS_DB_USER: wpuser
+      - "8081:80"
+
     networks:
-      wordpress-network: null
-    restart: unless-stopped
-    volumes:
-      - type: volume
-        source: wordpress_data
-        target: /var/www/html
-        volume: {}
-      - type: bind
-        source: C:\Users\Z BOOK G3\wordpress-compose-project\uploads
-        target: /var/www/html/wp-content/uploads
-        bind: {}
+      - wordpress-network
+
+
 networks:
   wordpress-network:
-    name: wordpress-compose-project_wordpress-network
     driver: bridge
+
+
 volumes:
   db_data:
-    name: wordpress-compose-project_db_data
   wordpress_data:
-    name: wordpress-compose-project_wordpress_data
