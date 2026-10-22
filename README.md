@@ -1,6 +1,6 @@
 # 🐳 WordPress Docker Compose Stack
 
-A production-inspired, containerized WordPress deployment built with Docker Compose, Nginx, PHP-FPM, MariaDB, and phpMyAdmin.
+A learning project for a containerized WordPress deployment built with Docker Compose, Nginx, PHP-FPM, MariaDB, and optional phpMyAdmin. It is not a production deployment template.
 
 The project demonstrates how multiple services can be orchestrated together using Docker Compose while maintaining service isolation, persistent storage, internal networking, health checks, and environment-based configuration.
 
@@ -158,6 +158,8 @@ Database credentials and environment-specific configuration are stored outside t
 
 phpMyAdmin provides a convenient interface for inspecting and managing the MariaDB database.
 
+It is disabled by default. Start it only when needed with `docker compose --profile tools up -d phpmyadmin`; when enabled, it binds to localhost only.
+
 
 ---
 
@@ -205,6 +207,8 @@ TZ=Africa/Cairo
 
 
 The repository only contains .env.example with placeholder values.
+
+Previously committed credentials may remain visible in Git history. Rotate any credentials that were ever used; replacing them in the current files does not revoke or erase historical values.
 
 
 ---
@@ -282,7 +286,7 @@ Docker Compose will:
 4. Pull MariaDB
 
 
-5. Pull phpMyAdmin
+5. Pull phpMyAdmin only if the optional `tools` profile is enabled
 
 
 6. Create persistent volumes
@@ -307,11 +311,14 @@ Expected services:
 mariadb
 wordpress
 nginx
-phpmyadmin
+
+phpMyAdmin is not started by default. Start it separately with the `tools` profile when needed.
 
 MariaDB should report:
 
 Healthy
+
+After Nginx starts, it should also report `healthy` once it can serve the WordPress endpoint.
 
 
 ---
@@ -324,9 +331,13 @@ Open:
 
 http://localhost:8089
 
-phpMyAdmin
+phpMyAdmin is optional. Start it when needed:
 
-Open:
+```bash
+docker compose --profile tools up -d phpmyadmin
+```
+
+Then open:
 
 http://localhost:8081
 
@@ -340,10 +351,10 @@ Service	Internal Port	Host Port
 Nginx	80	8089
 WordPress PHP-FPM	9000	Internal only
 MariaDB	3306	Internal only
-phpMyAdmin	80	8081
+phpMyAdmin (optional `tools` profile)	80	127.0.0.1:8081
 
 
-Only Nginx and phpMyAdmin expose ports to the host.
+Nginx is the only service exposed by default. phpMyAdmin is available only with the `tools` profile and binds to localhost.
 
 MariaDB and PHP-FPM remain accessible through the internal Docker network.
 
@@ -392,7 +403,7 @@ Persistent volumes allow data to survive container recreation.
 
 ❤️ Health Checks
 
-MariaDB uses a Docker health check to verify that the database is available and initialized.
+MariaDB uses a Docker health check to verify that the database is available and initialized. Nginx checks its local HTTP endpoint so `docker compose ps` also reports whether the public entry point is responding.
 
 Example:
 
