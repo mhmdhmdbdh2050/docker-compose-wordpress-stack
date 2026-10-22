@@ -194,21 +194,21 @@ Create your local .env file from the example:
 
 cp .env.example .env
 
-Then configure the required values:
+Replace both password placeholders with different, randomly generated values before starting the stack:
 
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wpuser
-MYSQL_PASSWORD=change_me
-MYSQL_ROOT_PASSWORD=change_me_root
+MYSQL_PASSWORD=replace_with_a_unique_random_password
+MYSQL_ROOT_PASSWORD=replace_with_a_different_random_password
 TZ=Africa/Cairo
 
-> Security: Never commit the real .env file to GitHub.
+Compose refuses to start MariaDB when either password is missing. Never commit the real `.env` file to GitHub or reuse these credentials elsewhere.
 
 
 
 The repository only contains .env.example with placeholder values.
 
-Previously committed credentials may remain visible in Git history. Rotate any credentials that were ever used; replacing them in the current files does not revoke or erase historical values.
+Credentials previously committed to Git history must be treated as exposed. If they were used by an existing MariaDB database, changing `.env` alone does not change the database users; rotate both MariaDB passwords on that database, update `.env`, and verify WordPress can reconnect. Back up the database before rotating credentials. This repository is a learning project and does not connect to a managed or production database.
 
 
 ---
@@ -252,7 +252,7 @@ Create the .env file:
 
 cp .env.example .env
 
-Update the credentials according to your environment.
+Replace both password placeholders with different, randomly generated values. The sample strings are placeholders and must not be used as credentials.
 
 
 ---
