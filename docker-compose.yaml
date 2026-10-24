@@ -11,8 +11,8 @@ services:
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
       TZ: ${TZ}
 
     healthcheck:
@@ -52,7 +52,7 @@ services:
       WORDPRESS_DB_HOST: mariadb:3306
       WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
       WORDPRESS_DB_USER: ${MYSQL_USER}
-      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
       TZ: ${TZ}
 
     volumes:
@@ -76,6 +76,13 @@ services:
       wordpress:
         condition: service_started
 
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
     ports:
       - "8089:80"
 
@@ -89,6 +96,8 @@ services:
   phpmyadmin:
     image: phpmyadmin:5.2
     container_name: phpmyadmin
+    profiles:
+      - tools
 
     restart: unless-stopped
 
@@ -101,7 +110,7 @@ services:
       PMA_PORT: 3306
 
     ports:
-      - "8081:80"
+      - "127.0.0.1:8081:80"
 
     networks:
       - wordpress-network
