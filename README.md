@@ -199,7 +199,7 @@ Set two different, randomly generated passwords before starting the stack. The s
 MYSQL_DATABASE=wordpress
 MYSQL_USER=wpuser
 MYSQL_PASSWORD=<unique-random-password>
-REVOKED_PASSWORD<different-unique-random-password>
+MYSQL_ROOT_PASSWORD=<different-unique-random-password>
 TZ=Africa/Cairo
 
 Compose refuses to start MariaDB when either password is missing. Never commit the real `.env` file to GitHub or reuse these credentials elsewhere.
